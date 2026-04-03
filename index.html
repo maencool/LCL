@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LCL - Level Challenge List</title>
+<link rel="icon" href="LCLicon.webp">
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+<div id="app">
+
+<button id="menuBtn" class="menu-btn" title="Menu">🏡</button>
+
+<nav id="menu" class="menu hidden">
+<div class="menu-header">
+<button id="closeMenuBtn" class="close-menu">×</button>
+<h2>Menu</h2>
+</div>
+
+<ul class="menu-list">
+
+<li><a href="#" data-action="home" class="menu-link">Home</a></li>
+<li><a href="#" data-action="sendLevel" class="menu-link">Send Level</a></li>
+<li><a href="#" data-action="rules" class="menu-link">Rules</a></li>
+<li><a href="#" data-action="settings" class="menu-link">Settings</a></li>
+
+<li id="authMenuItems">
+<a href="#" data-action="login" class="menu-link">Log In</a>
+<a href="#" data-action="register" class="menu-link">Register</a>
+</li>
+
+<li id="loggedInItems" class="hidden">
+<span id="userDisplayName" class="user-display"></span>
+<a href="#" data-action="logout" class="menu-link logout-link">Log Out</a>
+<a href="#" data-action="admin" class="menu-link admin-link hidden">Admin Panel</a>
+</li>
+
+<li class="menu-divider"></li>
+
+<li>
+<a href="https://discord.com" target="_blank" class="menu-link discord-link">
+📱 Join our Discord
+</a>
+</li>
+
+</ul>
+</nav>
+
+<div id="overlay" class="overlay hidden"></div>
+
+<div id="content" class="content">
+
+<section id="homePage" class="page active">
+
+<div class="container">
+
+<h1>LCL - Level Challenge List</h1>
+<p class="subtitle">Geometry Dash Community Rated Levels</p>
+
+<div id="leaderboard" class="leaderboard">
+
+<div class="leaderboard-header">
+<h2>Leaderboard</h2>
+</div>
+
+<div id="levelsList" class="levels-list">
+<p class="empty-state">
+No levels yet. Be the first to submit one!
+</p>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="sendLevelPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Submit a Level</h1>
+
+<form id="sendLevelForm" class="form">
+
+<div class="form-group">
+<label>Level Name</label>
+<input type="text" id="levelName" required>
+</div>
+
+<div class="form-group">
+<label>Level ID (Geometry Dash)</label>
+<input type="number" id="levelId" required>
+</div>
+
+<div class="form-group">
+<label>YouTube URL</label>
+<input type="url" id="youtubeUrl" required>
+</div>
+
+<button type="submit" class="btn btn-primary">
+Send Level to Admin!
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+<section id="rulesPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Rules</h1>
+
+<div class="rules-list">
+
+<div class="rule-card">
+<h3>Rule 1</h3>
+<p>Your level must be at least 1 minute long</p>
+</div>
+
+<div class="rule-card">
+<h3>Rule 2</h3>
+<p>CBF allowed but cheats NOT allowed</p>
+</div>
+
+<div class="rule-card">
+<h3>Rule 3</h3>
+<p>You must record your clicks</p>
+</div>
+
+<div class="rule-card">
+<h3>Rule 4</h3>
+<p>All gamemodes allowed</p>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="loginPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Log In</h1>
+
+<form id="loginForm" class="form">
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="loginEmail" required>
+</div>
+
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="loginPassword" required>
+</div>
+
+<button type="submit" class="btn btn-primary">
+Log In
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+<section id="registerPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Register</h1>
+
+<form id="registerForm" class="form">
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="registerEmail" required>
+</div>
+
+<div class="form-group">
+<label>Display Name</label>
+<input type="text" id="displayName" required>
+</div>
+
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="registerPassword" required>
+</div>
+
+<button type="submit" class="btn btn-primary">
+Register
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+<section id="settingsPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Settings</h1>
+
+<div class="settings-container">
+    <div class="settings-group">
+        <h3>Theme</h3>
+        <div class="setting-item">
+            <label for="themeSelect">Color Scheme</label>
+            <select id="themeSelect">
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+                <option value="auto">🔄 Auto</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+</div>
+
+</section>
+
+<section id="adminPage" class="page">
+
+<div class="container">
+
+<button class="back-btn" data-action="home">← Back</button>
+
+<h1>Admin Panel</h1>
+
+<div id="pendingLevelsList"></div>
+<div id="manageLevelsList"></div>
+
+</div>
+
+</section>
+
+</div>
+
+<!-- Level Details Modal -->
+<div id="levelModal" class="modal hidden">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('levelModal').classList.add('hidden')">×</button>
+        <div class="modal-body">
+            <div class="modal-thumbnail">
+                <img id="modalThumbnail" src="" alt="Level thumbnail">
+            </div>
+            <div class="modal-info">
+                <p><strong>Name:</strong> <span id="modalLevelName"></span></p>
+                <p><strong>Level ID:</strong> <span id="modalLevelId"></span></p>
+                <p><strong>Difficulty:</strong> <span id="modalDifficulty"></span></p>
+            </div>
+            <div class="modal-actions">
+                <a id="modalYoutubeLink" href="#" target="_blank" class="btn btn-primary">Watch on YouTube</a>
+                <button class="btn btn-secondary" onclick="document.getElementById('levelModal').classList.add('hidden')">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Replace Level Modal -->
+<div id="replaceModal" class="modal hidden">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('replaceModal').classList.add('hidden')">×</button>
+        <h2>Choose new position for this level</h2>
+        <div id="replacePositionsList" class="positions-list"></div>
+        <div class="modal-actions">
+            <button id="confirmReplaceBtn" class="btn btn-primary">Replace</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('replaceModal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- App Scripts -->
+<script src="storage.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

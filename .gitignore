@@ -1,0 +1,14 @@
+node_modules/
+lcl_data.json
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local

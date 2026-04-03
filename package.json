@@ -1,0 +1,26 @@
+{
+  "name": "lcl-level-challenge-list",
+  "version": "1.0.0",
+  "description": "LCL - Geometry Dash Community Level Leaderboard with Supabase backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "geometry-dash",
+    "leaderboard",
+    "levels",
+    "community"
+  ],
+  "author": "LCL Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.3",
+    "express": "^4.18.2",
+    "dotenv": "^16.0.3"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "users": [
+    {
+      "id": "admin1",
+      "email": "maencopra@gmail.com",
+      "displayname": "Admin",
+      "password": "maenissocool12345gGs",
+      "isadmin": true,
+      "createdat": "2026-03-23T08:29:51.728603",
+      "displayName": "Admin",
+      "isAdmin": true,
+      "createdAt": "2026-03-23T08:29:51.728603"
+    },
+    {
+      "id": "user_1774266930014",
+      "email": "speedcopra@gmail.com",
+      "displayName": "maen",
+      "password": "maen201422",
+      "isAdmin": false
+    }
+  ],
+  "levels": [],
+  "pendingLevels": [],
+  "settings": {
+    "id": "default",
+    "theme": "dark",
+    "language": "en",
+    "darkbackground": true,
+    "updatedat": "2026-03-23T08:40:41.223575",
+    "darkBackground": true
+  }
+}
