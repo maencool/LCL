@@ -23,6 +23,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL;
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'default-secret-change-me';
 const PORT = process.env.PORT || 3000;
 
 console.log('📦 Server starting...');
@@ -109,6 +110,16 @@ async function initializeDatabase() {
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Admin authentication check
+function isAdminAuthorized(req) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return false;
+    }
+    const token = authHeader.slice(7);
+    return token === ADMIN_SECRET;
+}
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -158,9 +169,14 @@ app.get(['/api/data', '/api/public-data'], async (req, res) => {
     }
 });
 
-// POST/UPDATE all data (bulk update)
+// POST/UPDATE all data (bulk update) - ADMIN ONLY
 app.post(['/api/data', '/api/public-data'], async (req, res) => {
     try {
+        // CHECK ADMIN AUTH FIRST
+        if (!isAdminAuthorized(req)) {
+            return res.status(403).json({ error: 'Unauthorized - Admin authorization required', hint: 'Include Authorization: Bearer <ADMIN_SECRET> header' });
+        }
+
         if (!SUPABASE_URL || !SUPABASE_KEY) {
             return res.status(503).json({ error: 'Database not configured' });
         }
