@@ -18,13 +18,22 @@ function hashPassword(password) {
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Verify Supabase connection
-console.log('🔗 Supabase URL:', SUPABASE_URL);
-console.log('✅ Supabase client initialized');
+console.log('🔗 Supabase URL:', SUPABASE_URL ? '✅ Set' : '❌ Missing');
+console.log('🔑 Supabase Key:', SUPABASE_KEY ? '✅ Set' : '❌ Missing');
+if (SUPABASE_URL && SUPABASE_KEY) {
+    console.log('✅ Supabase client initialized');
+} else {
+    console.warn('⚠️  Supabase credentials incomplete - database will not work');
+}
 
 // Initialize Supabase tables with default data
 async function initializeDatabase() {
     try {
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+            console.warn('⚠️  Skipping database init - Supabase credentials not configured');
+            return;
+        }
+
         // Check if users table exists by trying to fetch
         const { data: users, error: usersError } = await supabase
             .from('users')
@@ -32,11 +41,8 @@ async function initializeDatabase() {
             .limit(1);
 
         if (usersError) {
-            console.log('📝 Creating tables...');
-            // Tables don't exist, log instructions
-            console.log('⚠️  Please create tables in Supabase dashboard:');
-            console.log('   1. Go to: https://bbvfpwcppnvdmoqzdapk.supabase.co/project/_/editor');
-            console.log('   2. Create tables OR run SQL from SUPABASE_SETUP.sql');
+            console.log('📝 Database tables may not exist yet');
+            console.log('⚠️  Please create tables in Supabase dashboard or run SUPABASE_SETUP.sql');
             return;
         }
 
@@ -45,7 +51,6 @@ async function initializeDatabase() {
         // Check if default data exists
         if (users && users.length === 0) {
             console.log('📥 Inserting default data...');
-            console.log('⚠️ No default admin credentials defined in environment, skipping admin user creation.');
 
             // Insert default level
             await supabase.from('levels').insert({
@@ -74,7 +79,8 @@ async function initializeDatabase() {
             console.log(`✅ Database has ${users.length} users`);
         }
     } catch (error) {
-        console.error('❌ Database error:', error.message);
+        console.error('⚠️  Database initialization warning:', error.message);
+        // Continue anyway - API will return errors if needed
     }
 }
 
@@ -82,16 +88,25 @@ async function initializeDatabase() {
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Health check endpoint (no database needed)
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', server: 'running' });
+});
+
 // API Routes
 
 // GET all data
 app.get(['/api/data', '/api/public-data'], async (req, res) => {
     try {
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+            return res.status(503).json({ error: 'Database not configured', data: { users: [], levels: [], pendingLevels: [], settings: {} } });
+        }
+
         const [users, levels, pending, settings] = await Promise.all([
-            supabase.from('users').select('*'),
-            supabase.from('levels').select('*').eq('status', 'approved').order('id'),
-            supabase.from('levels').select('*').eq('status', 'pending').order('submitted_date'),
-            supabase.from('settings').select('*').limit(1).single()
+            supabase.from('users').select('*').catch(e => ({ data: [], error: e })),
+            supabase.from('levels').select('*').eq('status', 'approved').order('id').catch(e => ({ data: [], error: e })),
+            supabase.from('levels').select('*').eq('status', 'pending').order('submitted_date').catch(e => ({ data: [], error: e })),
+            supabase.from('settings').select('*').limit(1).single().catch(e => ({ data: null, error: e }))
         ]);
 
         const data = {
@@ -111,36 +126,56 @@ app.get(['/api/data', '/api/public-data'], async (req, res) => {
 // POST/UPDATE all data (bulk update)
 app.post(['/api/data', '/api/public-data'], async (req, res) => {
     try {
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+            return res.status(503).json({ error: 'Database not configured' });
+        }
+
         const { users, levels, pendingLevels, settings } = req.body;
 
         // Update users
         if (users && Array.isArray(users)) {
             for (const user of users) {
-                await supabase.from('users').upsert(user, { onConflict: 'id' });
+                try {
+                    await supabase.from('users').upsert(user, { onConflict: 'id' });
+                } catch (e) {
+                    console.warn('Could not update user:', e.message);
+                }
             }
         }
 
         // Update approved levels
         if (levels && Array.isArray(levels)) {
             for (const level of levels) {
-                await supabase.from('levels').upsert({ ...level, status: 'approved' }, { onConflict: 'id' });
+                try {
+                    await supabase.from('levels').upsert({ ...level, status: 'approved' }, { onConflict: 'id' });
+                } catch (e) {
+                    console.warn('Could not update level:', e.message);
+                }
             }
         }
 
         // Update pending levels
         if (pendingLevels && Array.isArray(pendingLevels)) {
             for (const level of pendingLevels) {
-                await supabase.from('levels').upsert({ ...level, status: 'pending' }, { onConflict: 'id' });
+                try {
+                    await supabase.from('levels').upsert({ ...level, status: 'pending' }, { onConflict: 'id' });
+                } catch (e) {
+                    console.warn('Could not update pending level:', e.message);
+                }
             }
         }
 
         // Update settings
         if (settings) {
-            await supabase.from('settings').upsert(settings, { onConflict: 'id' });
+            try {
+                await supabase.from('settings').upsert(settings, { onConflict: 'id' });
+            } catch (e) {
+                console.warn('Could not update settings:', e.message);
+            }
         }
 
-        console.log('✅ Data saved at:', new Date().toLocaleTimeString());
-        res.json({ success: true, message: 'Data saved to Supabase' });
+        console.log('✅ Data save attempted at:', new Date().toLocaleTimeString());
+        res.json({ success: true, message: 'Data sync requested' });
     } catch (error) {
         console.error('❌ Error saving data:', error);
         res.status(500).json({ error: 'Failed to save data', details: error.message });
