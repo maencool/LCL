@@ -2,11 +2,18 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 const app = express();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL;
+const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
 const PORT = process.env.PORT || 3000;
+
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -38,15 +45,19 @@ async function initializeDatabase() {
         // Check if default data exists
         if (users && users.length === 0) {
             console.log('📥 Inserting default data...');
-            
-            // Insert default admin user
-            await supabase.from('users').insert({
-                id: 'admin1',
-                email: 'maencopra@gmail.com',
-                display_name: 'Admin',
-                password: 'maenissocool12345gGs',
-                is_admin: true
-            });
+
+            if (DEFAULT_ADMIN_EMAIL && DEFAULT_ADMIN_PASSWORD) {
+                await supabase.from('users').insert({
+                    id: 'admin1',
+                    email: DEFAULT_ADMIN_EMAIL,
+                    display_name: 'Admin',
+                    password: hashPassword(DEFAULT_ADMIN_PASSWORD),
+                    is_admin: true
+                });
+                console.log('✅ Default admin user seeded from environment');
+            } else {
+                console.log('⚠️ No default admin credentials defined in environment, skipping admin user creation.');
+            }
 
             // Insert default level
             await supabase.from('levels').insert({
@@ -86,7 +97,7 @@ app.use(express.static(__dirname));
 // API Routes
 
 // GET all data
-app.get('/api/data', async (req, res) => {
+app.get(['/api/data', '/api/public-data'], async (req, res) => {
     try {
         const [users, levels, pending, settings] = await Promise.all([
             supabase.from('users').select('*'),
@@ -110,7 +121,7 @@ app.get('/api/data', async (req, res) => {
 });
 
 // POST/UPDATE all data (bulk update)
-app.post('/api/data', async (req, res) => {
+app.post(['/api/data', '/api/public-data'], async (req, res) => {
     try {
         const { users, levels, pendingLevels, settings } = req.body;
 

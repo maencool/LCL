@@ -140,7 +140,7 @@ const App = {
     refreshDataFromServer() {
         // Add timestamp to bust cache
         const timestamp = new Date().getTime();
-        fetch(`http://localhost:3000/api/data?t=${timestamp}`)
+        fetch(`${Storage.API_URL}?t=${timestamp}`)
             .then(res => res.json())
             .then(data => {
                 Storage.cachedData = data;
@@ -321,13 +321,13 @@ const App = {
     },
 
     // Handle login
-    handleLogin(e) {
+    async handleLogin(e) {
         e.preventDefault();
         
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
-        const result = Auth.login(email, password);
+        const result = await Auth.login(email, password);
         
         if (result.success) {
             alert('Login successful!');
@@ -340,14 +340,14 @@ const App = {
     },
 
     // Handle register
-    handleRegister(e) {
+    async handleRegister(e) {
         e.preventDefault();
         
         const email = document.getElementById('registerEmail').value;
         const displayName = document.getElementById('displayName').value;
         const password = document.getElementById('registerPassword').value;
 
-        const result = Auth.register(email, displayName, password);
+        const result = await Auth.register(email, displayName, password);
         
         if (result.success) {
             alert(result.message);

@@ -15,11 +15,9 @@
 ### Step 3: Login as Admin (Optional)
 To access the admin panel:
 1. Click 🏡 → Log In
-2. Enter:
-   - Email: `maencopra@gmail.com`
-   - Password: `maenissocool12345gGs`
+2. Sign in with an existing admin account, or register a new account and ask your site owner to grant admin access.
 3. Click "Log In"
-4. The 🏡 menu now shows "Admin Panel" option
+4. The 🏡 menu now shows "Admin Panel" if your account has admin privileges
 
 ### Step 4: Test Features
 

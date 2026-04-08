@@ -57,9 +57,8 @@ Just open `index.html` directly
 - Use Export/Import to sync manually
 
 ### Admin Account
-Use these credentials to access the admin panel:
-- **Email**: `maencopra@gmail.com`
-- **Password**: `maenissocool12345gGs`
+There is no default admin password shipped with the public repo.
+Register a new account or configure an admin user through your own backend environment.
 
 ### Discord Community
 Join our Discord community: https://discord.com/channels/1479132434661511248/1479132436079317087

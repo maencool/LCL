@@ -2,7 +2,16 @@
 const Auth = {
     currentUser: null,
 
-    // Initialize auth from sessionStorage or localStorage
+    async hashPassword(password) {
+        if (!password) return '';
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hashBuffer))
+            .map(byte => byte.toString(16).padStart(2, '0'))
+            .join('');
+    },
+
     init() {
         const userId = sessionStorage.getItem('lcl_user_id');
         if (userId) {
@@ -13,10 +22,10 @@ const Auth = {
         }
     },
 
-    // Register user
-    register(email, displayName, password) {
+    async register(email, displayName, password) {
         console.log(`📝 Registering: ${email}`);
-        const result = Storage.addUser(email, displayName, password);
+        const passwordHash = await this.hashPassword(password);
+        const result = Storage.addUser(email, displayName, passwordHash);
         if (result.success) {
             console.log(`✅ Registered successfully`);
             return { success: true, message: 'Registration successful! Please log in.' };
@@ -25,8 +34,7 @@ const Auth = {
         return result;
     },
 
-    // Login user
-    login(email, password) {
+    async login(email, password) {
         console.log(`🔐 Login attempt for: ${email}`);
         const user = Storage.getUserByEmail(email);
         
@@ -35,7 +43,8 @@ const Auth = {
             return { success: false, message: 'User not found' };
         }
 
-        if (user.password !== password) {
+        const passwordHash = await this.hashPassword(password);
+        if (user.password !== passwordHash) {
             console.log(`❌ Invalid password`);
             return { success: false, message: 'Invalid password' };
         }
@@ -46,7 +55,6 @@ const Auth = {
         return { success: true, user };
     },
 
-    // Logout user
     logout() {
         const name = this.currentUser ? this.currentUser.displayName : 'User';
         this.currentUser = null;
@@ -55,17 +63,14 @@ const Auth = {
         return { success: true };
     },
 
-    // Check if user is logged in
     isLoggedIn() {
         return this.currentUser !== null;
     },
 
-    // Check if user is admin
     isAdmin() {
         return this.currentUser && this.currentUser.isAdmin;
     },
 
-    // Get current user
     getCurrentUser() {
         return this.currentUser;
     }

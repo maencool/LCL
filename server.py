@@ -6,6 +6,7 @@ No npm or Node.js required!
 
 import json
 import os
+import hashlib
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import threading
@@ -21,15 +22,7 @@ def load_data():
             return json.load(f)
     
     return {
-        "users": [
-            {
-                "id": "admin1",
-                "email": "maencopra@gmail.com",
-                "displayName": "Admin",
-                "password": "maenissocool12345gGs",
-                "isAdmin": True
-            }
-        ],
+        "users": [],
         "levels": [
             {
                 "id": 1,
@@ -66,7 +59,8 @@ class LCLHandler(SimpleHTTPRequestHandler):
     
     def do_GET(self):
         """Handle GET requests"""
-        if self.path == '/api/data':
+        parsed_path = urlparse(self.path).path
+        if parsed_path in ['/api/data', '/api/public-data']:
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -79,7 +73,8 @@ class LCLHandler(SimpleHTTPRequestHandler):
     
     def do_POST(self):
         """Handle POST requests"""
-        if self.path == '/api/data':
+        parsed_path = urlparse(self.path).path
+        if parsed_path in ['/api/data', '/api/public-data']:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             
