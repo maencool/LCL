@@ -1,9 +1,23 @@
 // Node.js server with Supabase backend
-require('dotenv').config();
-const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
-const crypto = require('crypto');
-const app = express();
+try {
+    require('dotenv').config();
+} catch (e) {
+    console.warn('⚠️  dotenv not available, using environment variables directly');
+}
+
+let express, createClient, crypto, app;
+
+try {
+    express = require('express');
+    crypto = require('crypto');
+    const supabaseModule = require('@supabase/supabase-js');
+    createClient = supabaseModule.createClient;
+    app = express();
+} catch (error) {
+    console.error('❌ FATAL: Failed to require modules:', error.message);
+    console.error('💡 Make sure to run: npm install');
+    process.exit(1);
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
@@ -11,19 +25,26 @@ const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL;
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
 const PORT = process.env.PORT || 3000;
 
+console.log('📦 Server starting...');
+console.log('📝 NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('🔌 PORT:', PORT);
+
 function hashPassword(password) {
     return crypto.createHash('sha256').update(password).digest('hex');
 }
 
-// Initialize Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-console.log('🔗 Supabase URL:', SUPABASE_URL ? '✅ Set' : '❌ Missing');
-console.log('🔑 Supabase Key:', SUPABASE_KEY ? '✅ Set' : '❌ Missing');
-if (SUPABASE_URL && SUPABASE_KEY) {
-    console.log('✅ Supabase client initialized');
-} else {
-    console.warn('⚠️  Supabase credentials incomplete - database will not work');
+// Initialize Supabase client - gracefully handle missing credentials
+let supabase = null;
+try {
+    if (SUPABASE_URL && SUPABASE_KEY) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✅ Supabase client initialized');
+    } else {
+        console.warn('⚠️  Supabase credentials missing - database features disabled');
+    }
+} catch (error) {
+    console.error('⚠️  Supabase init error:', error.message);
+    console.warn('⚠️  Server will run in offline mode');
 }
 
 // Initialize Supabase tables with default data
@@ -88,9 +109,23 @@ async function initializeDatabase() {
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Root endpoint
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
 // Health check endpoint (no database needed)
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', server: 'running' });
+    res.json({ status: 'ok', server: 'running', timestamp: new Date().toISOString() });
+});
+
+// Status endpoint
+app.get('/status', (req, res) => {
+    res.json({ 
+        status: 'running',
+        supabase: supabase ? 'connected' : 'offline',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // API Routes
@@ -192,7 +227,7 @@ app.get('/api/data-file-location', async (req, res) => {
 });
 
 // Start server immediately, initialize database in background
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log('╔════════════════════════════════════════╗');
     console.log('║  LCL - Level Challenge List Server     ║');
     console.log('║  ☁️  POWERED BY SUPABASE              ║');
@@ -200,17 +235,26 @@ app.listen(PORT, () => {
     console.log(`║  🚀 Server running on:                 ║`);
     console.log(`║  http://localhost:${PORT}                       ║`);
     console.log('║                                        ║');
-    console.log('║  📍 Open in all browsers:              ║');
-    console.log(`║  Edge: http://localhost:${PORT}         ║`);
-    console.log(`║  Brave: http://localhost:${PORT}        ║`);
-    console.log(`║  Chrome: http://localhost:${PORT}       ║`);
+    console.log('║  📍 Health check:                      ║');
+    console.log(`║  GET /health                           ║`);
     console.log('║                                        ║');
     console.log('║  ☁️  Database:                         ║');
-    console.log('║  Supabase Cloud (Production Ready)     ║');
+    console.log(supabase ? '║  Supabase Cloud (Ready)                ║' : '║  Offline Mode (No Database)            ║');
     console.log('║                                        ║');
-    console.log('║  ✅ All data synced to cloud!         ║');
     console.log('║  Press Ctrl+C to stop server           ║');
     console.log('╚════════════════════════════════════════╝');
+});
+
+// Handle server errors
+server.on('error', (err) => {
+    console.error('❌ Server error:', err.message);
+    process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught exception:', err.message);
+    process.exit(1);
 });
 
 // Initialize database in background (non-blocking)
