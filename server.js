@@ -156,28 +156,29 @@ app.get('/api/data-file-location', async (req, res) => {
     });
 });
 
-// Start server
-(async () => {
-    await initializeDatabase();
-    
-    app.listen(PORT, () => {
-        console.log('╔════════════════════════════════════════╗');
-        console.log('║  LCL - Level Challenge List Server     ║');
-        console.log('║  ☁️  POWERED BY SUPABASE              ║');
-        console.log('╠════════════════════════════════════════╣');
-        console.log(`║  🚀 Server running on:                 ║`);
-        console.log(`║  http://localhost:${PORT}                       ║`);
-        console.log('║                                        ║');
-        console.log('║  📍 Open in all browsers:              ║');
-        console.log(`║  Edge: http://localhost:${PORT}         ║`);
-        console.log(`║  Brave: http://localhost:${PORT}        ║`);
-        console.log(`║  Chrome: http://localhost:${PORT}       ║`);
-        console.log('║                                        ║');
-        console.log('║  ☁️  Database:                         ║');
-        console.log('║  Supabase Cloud (Production Ready)     ║');
-        console.log('║                                        ║');
-        console.log('║  ✅ All data synced to cloud!         ║');
-        console.log('║  Press Ctrl+C to stop server           ║');
-        console.log('╚════════════════════════════════════════╝');
-    });
-})();
+// Start server immediately, initialize database in background
+app.listen(PORT, () => {
+    console.log('╔════════════════════════════════════════╗');
+    console.log('║  LCL - Level Challenge List Server     ║');
+    console.log('║  ☁️  POWERED BY SUPABASE              ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log(`║  🚀 Server running on:                 ║`);
+    console.log(`║  http://localhost:${PORT}                       ║`);
+    console.log('║                                        ║');
+    console.log('║  📍 Open in all browsers:              ║');
+    console.log(`║  Edge: http://localhost:${PORT}         ║`);
+    console.log(`║  Brave: http://localhost:${PORT}        ║`);
+    console.log(`║  Chrome: http://localhost:${PORT}       ║`);
+    console.log('║                                        ║');
+    console.log('║  ☁️  Database:                         ║');
+    console.log('║  Supabase Cloud (Production Ready)     ║');
+    console.log('║                                        ║');
+    console.log('║  ✅ All data synced to cloud!         ║');
+    console.log('║  Press Ctrl+C to stop server           ║');
+    console.log('╚════════════════════════════════════════╝');
+});
+
+// Initialize database in background (non-blocking)
+initializeDatabase().catch(err => {
+    console.error('⚠️ Database init error (server still running):', err.message);
+});
