@@ -1,88 +1,42 @@
-import Storage from './storage.js'; // Import the storage system
+import Storage from './storage.js';
 
-// Authentication Management
 const Auth = {
     currentUser: null,
 
     async hashPassword(password) {
-        if (!password) return '';
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        return Array.from(new Uint8Array(hashBuffer))
-            .map(byte => byte.toString(16).padStart(2, '0'))
-            .join('');
+        const msgUint8 = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     },
 
     init() {
-        const userId = sessionStorage.getItem('lcl_user_id');
-        if (userId) {
-            this.currentUser = Storage.getUserById(userId);
-            if (this.currentUser) {
-                console.log(`✅ Auto-logged in: ${this.currentUser.displayName}`);
-                return this.currentUser;
-            }
-        }
-        return null;
+        const id = localStorage.getItem('lcl_user_id');
+        if (id) this.currentUser = Storage.getUserById(id);
     },
 
-    async register(email, displayName, password) {
-        console.log(`📝 Registering: ${email}`);
-        const passwordHash = await this.hashPassword(password);
-        const result = Storage.addUser(email, displayName, passwordHash);
-        if (result.success) {
-            console.log(`✅ Registered successfully`);
-            return { success: true, message: 'Registration successful! Please log in.' };
-        }
-        console.log(`❌ Registration failed: ${result.message}`);
-        return result;
+    async register(email, name, pass) {
+        const hash = await this.hashPassword(pass);
+        return Storage.addUser(email, name, hash);
     },
 
-    async login(email, password) {
-        console.log(`🔐 Login attempt for: ${email}`);
+    async login(email, pass) {
         const user = Storage.getUserByEmail(email);
-        
-        if (!user) {
-            console.log(`❌ User not found`);
-            return { success: false, message: 'User not found' };
-        }
-
-        const passwordHash = await this.hashPassword(password);
-        if (user.password !== passwordHash) {
-            console.log(`❌ Invalid password`);
-            return { success: false, message: 'Invalid password' };
-        }
-
+        if (!user) return { success: false, message: 'User not found' };
+        const hash = await this.hashPassword(pass);
+        if (user.password !== hash) return { success: false, message: 'Invalid password' };
         this.currentUser = user;
-        sessionStorage.setItem('lcl_user_id', user.id);
-        console.log(`✅ Login successful: ${user.displayName}`);
+        localStorage.setItem('lcl_user_id', user.id);
         return { success: true, user };
     },
 
     logout() {
-        const name = this.currentUser ? this.currentUser.displayName : 'User';
         this.currentUser = null;
-        sessionStorage.removeItem('lcl_user_id');
-        console.log(`👋 Logged out: ${name}`);
-        return { success: true };
+        localStorage.removeItem('lcl_user_id');
     },
 
-    isLoggedIn() {
-        return this.currentUser !== null;
-    },
-
-    isAdmin() {
-        return this.currentUser && this.currentUser.isAdmin;
-    },
-
-    getCurrentUser() {
-        return this.currentUser;
-    }
+    isLoggedIn() { return this.currentUser !== null; },
+    isAdmin() { return this.currentUser?.isAdmin === true; }
 };
 
-// Initialize auth when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    Auth.init();
-});
-
-export default Auth; // Allow other files to use Auth
+Auth.init();
+export default Auth;
